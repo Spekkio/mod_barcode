@@ -84,6 +84,8 @@ autocreate([BarCodeId|Rest], Id, Context) when is_integer(BarCodeId) ->
 	    HostName = proplists:get_value(hostname,m_site:all(Context)),
 	    BarcodeContent = io_lib:format([["http://"|HostName]|"/page/~p"],[Id]);
 	code93 ->
+	    BarcodeContent = io_lib:format("~p",[Id]);
+	_ ->
 	    BarcodeContent = io_lib:format("~p",[Id])
     end,
 
