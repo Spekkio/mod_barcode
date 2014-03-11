@@ -11,6 +11,7 @@
 -export([init/1]).
 
 -export([
+	 replace_underscore/2,
 	 manage_schema/2,
 	 gen_barcode/4,
 	 observe_rsc_update_done/2
@@ -112,6 +113,9 @@ autocreate([BarCodeId|Rest], Id, Context) when is_integer(BarCodeId) ->
 	qrcode ->
 	    HostName = proplists:get_value(hostname,m_site:all(Context)),
 	    BarcodeContent = io_lib:format([["http://"|HostName]|"/page/~p"],[Id]);
+	datamatrix ->
+	    HostName = proplists:get_value(hostname,m_site:all(Context)),
+	    BarcodeContent = io_lib:format([["http://"|HostName]|"/page/~p"],[Id]);
 	_ ->
 	    BarcodeContent = io_lib:format("~p",[Id])
     end,
@@ -145,6 +149,18 @@ to_list(Dir) when is_binary(Dir) ->
 to_list(Dir) when is_list(Dir) ->
     Dir.
 
+replace_underscore([Letter|Tail], New) ->
+    NewLetter = case Letter of
+		    $_ ->
+			$-;
+		    _ ->
+			Letter
+		end,
+    replace_underscore(Tail, [New|[NewLetter]]);
+
+replace_underscore([], New) ->
+    lists:flatten(New).
+
 exec_command(A, TmpFile, Context) ->
     Dir = to_list(m_config:get_value(mod_barcode, barcode_ps_dir, Context)),
     ConvertParams = to_list(m_config:get_value(mod_barcode, barcode_convert_params, Context)),
@@ -157,7 +173,7 @@ gen_barcode(Data, Type, TmpFile, Context) when is_atom(Type) and is_list(Data) a
 	Resource ->
 	    Title = proplists:get_value(title, Resource),
 	    TypeName = binary_to_list(z_trans:trans(Title, Context)),
-	    TypeFun = atom_to_list(Type),
+	    TypeFun = replace_underscore(atom_to_list(Type), []),
 	    ?zInfo(io_lib:format("Create Barcode...~p",[TypeName]),Context),
 	    exec_command(lists:flatten([[[[[[["/Helvetica findfont 10 scalefont setfont\n30 700 moveto ("]|Data]|") (includecheck includetext) /"]|TypeFun] |"/uk.co.terryburton.bwipp findresource exec\n0 -17 rmoveto ("]|TypeName]|") show\n\nshowpage"]), TmpFile, Context)
     end;
