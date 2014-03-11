@@ -53,7 +53,36 @@ predicates() ->
 resources() ->
     [
      {qrcode, barcode_type, [{title, <<"QR Code">>}]},
-     {code93, barcode_type, [{title, <<"Code 93">>}]}
+     {code93, barcode_type, [{title, <<"Code 93">>}]},
+     {code39, barcode_type, [{title, <<"Code 39">>}]},
+     {gs1_128composite, barcode_type, [{title, <<"GS1-128 Composite">>}]},
+     {interleaved2of5, barcode_type, [{title, <<"Interleaved 2 of 5">>}]},
+     {databartruncated, barcode_type, [{title, <<"DataBar Truncated">>}]},
+     {databarstacked, barcode_type, [{title, <<"DataBar Stacked">>}]},
+     {databarlimited, barcode_type, [{title, <<"DataBar Limited">>}]},
+     {databarexpanded, barcode_type, [{title, <<"DataBar Expanded">>}]},
+     {pharmacode, barcode_type, [{title, <<"Pharmacode">>}]},
+     {code2of5, barcode_type, [{title, <<"Code 2 of 5">>}]},
+     {code11, barcode_type, [{title, <<"Code 11">>}]},
+     {rationalizedCodabar, barcode_type, [{title, <<"Rationalized Codabar">>}]},
+     {ean13, barcode_type, [{title, <<"EAN-13">>}]},
+     {ean8, barcode_type, [{title, <<"EAN-8">>}]},
+     {upca, barcode_type, [{title, <<"UPC-A">>}]},
+     {upce, barcode_type, [{title, <<"UPC-E">>}]},
+     {isbn, barcode_type, [{title, <<"ISBN">>}]},
+     {onecode, barcode_type, [{title, <<"OneCode">>}]},
+     {postnet, barcode_type, [{title, <<"Postnet">>}]},
+     {royalmail, barcode_type, [{title, <<"Royal Mail">>}]},
+     {kix, barcode_type, [{title, <<"KIX">>}]},
+     {japanpost, barcode_type, [{title, <<"JapanPost">>}]},
+     {auspost, barcode_type, [{title, <<"AusPost">>}]},
+     {msi, barcode_type, [{title, <<"MSI">>}]},
+     {plessey, barcode_type, [{title, <<"Plessey">>}]},
+     {itf14, barcode_type, [{title, <<"ITF-14">>}]},
+     {maxicode, barcode_type, [{title, <<"MaxiCode">>}]},
+     {pdf417, barcode_type, [{title, <<"PDF417">>}]},
+     {datamatrix, barcode_type, [{title, <<"Data Matrix">>}]},
+     {azteccode, barcode_type, [{title, <<"Aztec Code">>}]}
      ].
     
 
@@ -83,8 +112,6 @@ autocreate([BarCodeId|Rest], Id, Context) when is_integer(BarCodeId) ->
 	qrcode ->
 	    HostName = proplists:get_value(hostname,m_site:all(Context)),
 	    BarcodeContent = io_lib:format([["http://"|HostName]|"/page/~p"],[Id]);
-	code93 ->
-	    BarcodeContent = io_lib:format("~p",[Id]);
 	_ ->
 	    BarcodeContent = io_lib:format("~p",[Id])
     end,
@@ -123,30 +150,16 @@ exec_command(A, TmpFile, Context) ->
     ConvertParams = to_list(m_config:get_value(mod_barcode, barcode_convert_params, Context)),
     os:cmd([[[[[[[[[["cat <<EOF | cat "]|Dir]|"/barcode.ps - | convert "]|ConvertParams]|" - png:"]|TmpFile]|"\n"]|A]]|"\nEOF"]).
 
-gen_barcode(Data, Type, TmpFile, Context) ->
-    Ret = case Type of
-	qrcode ->
-	    TypeName = "QR Code",
-	    TypeFun = "qrcode",
-	    {ok};
-	code93 ->
-	    TypeName = "Code 93",
-	    TypeFun = "code93",
-	    {ok};
-	ErrType ->
-	    ?zWarning(io_lib:format("There is no such barcode type: ~p",[ErrType]), Context),
-	    TypeName = [],
-	    TypeFun = [],
-	    {err}
-    end,
+gen_barcode(Data, Type, TmpFile, Context) when is_atom(Type) and is_list(Data) and is_list(TmpFile) ->
+    case m_rsc:get(Type, Context) of
+	undefined ->
+	    {undefined, Type};
+	Resource ->
+	    Title = proplists:get_value(title, Resource),
+	    TypeName = binary_to_list(z_trans:trans(Title, Context)),
+	    TypeFun = atom_to_list(Type),
+	    ?zInfo(io_lib:format("Create Barcode...~p",[TypeName]),Context),
+	    exec_command(lists:flatten([[[[[[["/Helvetica findfont 10 scalefont setfont\n30 700 moveto ("]|Data]|") (includecheck includetext) /"]|TypeFun] |"/uk.co.terryburton.bwipp findresource exec\n0 -17 rmoveto ("]|TypeName]|") show\n\nshowpage"]), TmpFile, Context)
+    end;
+gen_barcode(_,_,_,_) -> undefined.
 
-    case Ret of
-	{ok} ->
-	    exec_command(lists:flatten([[[[[[["/Helvetica findfont 10 scalefont setfont\n
-30 700 moveto ("]|Data]|") (includecheck includetext) /"]|TypeFun] |"/uk.co.terryburton.bwipp findresource exec\n
-0 -17 rmoveto ("]|TypeName]|") show\n
-\n
-showpage"]), TmpFile, Context);
-         _ ->
-             {barcode_error}
-    end.
