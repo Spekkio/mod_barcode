@@ -1,0 +1,1 @@
+http://{{m.site.hostname}}/page/{{id}}
