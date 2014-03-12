@@ -4,7 +4,8 @@ An unfinished (but usable) module for [Zotonic](https://github.com/zotonic/zoton
 
 ## TODO
 
-1. see what I can do with dispatch rules for barcode templates.
+1. A tool to manually create barcodes.
+2. See what I can do with dispatch rules for barcode templates.
 
 ## Requires
 
@@ -21,13 +22,15 @@ A configuration named `barcode_convert_params` under System->Config sets the par
 
 ## How to use
 
-A relation named `autocreate_barcode_type` is created by mod_barcode.
+### Autocreate Barcodes
 
-Edit a Category and add relation to a barcode type under "Barcode".
+When a resource is created under a category (for example Text category), a Barcode is automatically created and hooked into media under that resource.
 
-Some barcode types are automatically created by mod_barcode. You can add more Barcode types by creating resources in the category "Barcode Type", the unique name of that resource is the same as the function in postscriptbarcode.
+But for this to work, you must first edit a Category and add a relation to a barcode type under "Barcode".
 
-When a resource is created under a category that has a barcode relation, a Barcode is automatically created and hooked into media under that resource.
+A predicate named `autocreate_barcode_type` is created by mod_barcode.
+
+You can add more Barcode types manually by creating resources in the category "Barcode Type", the unique name of that resource is the same as the function in postscriptbarcode.
 
 The content of the barcode is by standard the Id of the resource that the barcode is created with, except for QR Code and DataMatrix, where the content is the link to the page for that resource. The barcode content can be edited by creating a template, for instance 'barcode.qrcode.tpl' looks like this by standard
 
