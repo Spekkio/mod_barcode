@@ -167,7 +167,7 @@ autocreate([BarCodeId|Rest], Id, Context) when is_integer(BarCodeId) ->
 %	    BarcodeContent = io_lib:format("~p",[Id])
  %   end,
 
-    case mod_barcode:gen_barcode(BarcodeContent, BarCodeType, TmpFile, Context) of
+    case gen_barcode(BarcodeContent, BarCodeType, TmpFile, Context) of
 	[] -> %returns an empty list means ok.
 	    Data = file:read_file(TmpFile),
 	    case m_media:insert_file(#upload{filename=TmpFile, data=Data, tmpfile=TmpFile, mime="image/png"},Context) of
@@ -243,5 +243,15 @@ gen_barcode(Data, Type, TmpFile, Context) when is_atom(Type) and is_list(Data) a
 	    ?zInfo(io_lib:format("Create Barcode...~p",[TypeName]),Context),
 	    exec_command(lists:flatten([[[[[[["/Helvetica findfont 10 scalefont setfont\n30 700 moveto ("]|Data]|") (includecheck includetext) /"]|TypeFun] |"/uk.co.terryburton.bwipp findresource exec\n0 -17 rmoveto ("]|TypeName]|") show\n\nshowpage"]), TmpFile, Context)
     end;
+
+gen_barcode(Data, Type, TmpFile, Context) when is_integer(Data) ->
+    gen_barcode(integer_to_list(Data), Type, TmpFile, Context);
+
+gen_barcode(Data, Type, TmpFile, Context) when is_binary(Data) ->
+    gen_barcode(binary_to_list(Data), Type, TmpFile, Context);
+
+gen_barcode(Data, Type, TmpFile, Context) when is_list(Type) ->
+    gen_barcode(Data, list_to_atom(Type), TmpFile, Context);
+
 gen_barcode(_,_,_,_) -> undefined.
 
