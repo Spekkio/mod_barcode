@@ -96,14 +96,52 @@ observe_rsc_update_done(#rsc_update_done{action=insert, id=Id, pre_props=Prev, p
 
     BarCodeTypes = m_edge:objects(CatId, autocreate_barcode_type, Context),
 
+    %?zInfo(io_lib:format("Autocreate Barcode of types: ~p",[BarCodeTypes]),Context),
+    ContextQAll = lists:flatten([ [{id, Id}, {type, BarCodeTypes}] | z_context:get_all(Context)]),
+    Out = lists:flatten(z_template:render("barcode.tpl", ContextQAll,Context)),
+    ?zInfo(io_lib:format("Out: ~p",[glue_binaries(Out)]),Context),
+
     autocreate(BarCodeTypes, Id, Context);
-    %?zInfo(io_lib:format("Autocreate Barcode of types: ~p",[BarCodeTypes]),Context);
+
 
 observe_rsc_update_done(_,_) ->
     undefined.
 
 
+%%%%
+%%%% Some function for cleaning up a list of binaries [<<"hello">>, <<"world!\n">>] -> "helloworld"
+%%%%
+cleanup(<<Tail/binary>>) ->
+    cleanup(Tail, []).
 
+cleanup(<<Char:1/binary, Tail/binary>>, Clean) ->
+    case re:run(Char, "[a-zA-Z0-9]", [global]) of
+	{match, [[{0,1}]]} ->
+	    cleanup(Tail, [Clean | binary_to_list(Char)]);
+	nomatch ->
+	    cleanup(Tail, [Clean]);	
+	_ ->
+	    cleanup(Tail, [Clean])
+    end;
+cleanup(<<>>, Clean) ->
+    lists:flatten(Clean).
+
+glue_binaries([<<>> | Tail]) ->
+    glue_binaries(Tail, []);
+
+glue_binaries([First | Tail]) ->
+    glue_binaries(Tail, cleanup(First)).
+
+glue_binaries([First | Tail], Build) ->
+    glue_binaries(Tail, [Build | cleanup(First)]);
+
+glue_binaries([], Build) ->
+    lists:flatten(Build).
+
+
+%%%%
+%%%% The autocreate function used by observe_rsc_update_done
+%%%%
 autocreate([BarCodeId|Rest], Id, Context) when is_integer(BarCodeId) ->
     TmpFile = z_tempfile:new(),
     BarCodeType=list_to_atom(binary_to_list(proplists:get_value(name, m_rsc:get(BarCodeId,Context)))),
