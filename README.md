@@ -4,7 +4,7 @@ An unfinished (but usable) module for [Zotonic](https://github.com/zotonic/zoton
 
 ## TODO
 
-1. Content data of generated barcode to be configurable by the user. At the moment it is hardcoded in mod_barcode.erl. For instance, QR Codes generates a link to the page http://hostname/page/id
+1. see what I can do with dispatch rules for barcode templates.
 
 ## Requires
 
@@ -25,6 +25,12 @@ A relation named `autocreate_barcode_type` is created by mod_barcode.
 
 Edit a Category and add relation to a barcode type under "Barcode".
 
-Two barcode types are automatically created by mod_barcode. Choose QR Code or Code 93, you can add more Barcode types by creating resources in the category "Barcode Type".
+Some barcode types are automatically created by mod_barcode. You can add more Barcode types by creating resources in the category "Barcode Type", the unique name of that resource is the same as the function in postscriptbarcode.
 
-When a resource is created under a category that has a barcode relation, a Barcode is created and hooked into media under that resource.
+When a resource is created under a category that has a barcode relation, a Barcode is automatically created and hooked into media under that resource.
+
+The content of the barcode is by standard the Id of the resource that the barcode is created with, except for QR Code and DataMatrix, where the content is the link to the page for that resource. The barcode content can be edited by creating a template, for instance 'barcode.qrcode.tpl' looks like this by standard
+
+    http://{{m.site.hostname}}/page/{{id}}
+
+This can be changed to anything you want by creating the file 'barcode.qrcode.tpl' under your templates/ directory.
