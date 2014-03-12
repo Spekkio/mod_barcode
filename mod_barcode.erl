@@ -113,7 +113,7 @@ cleanup(<<Tail/binary>>) ->
     cleanup(Tail, []).
 
 cleanup(<<Char:1/binary, Tail/binary>>, Clean) ->
-    case re:run(Char, "[\./:a-zA-Z0-9]", [global]) of
+    case re:run(Char, "[\"'`'^*a-zA-Z0-9-+&$:./()?#% ]", [global]) of
 	{match, [[{0,1}]]} ->
 	    cleanup(Tail, [Clean | binary_to_list(Char)]);
 	nomatch ->
