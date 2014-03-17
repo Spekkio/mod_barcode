@@ -23,7 +23,7 @@
 init(Context) ->
     case m_config:get_value(mod_barcode, barcode_ps_dir, Context) of
 	undefined ->
-	    m_config:set_value(mod_barcode, barcode_ps_dir, "../barcode_ps", Context);
+	    m_config:set_value(mod_barcode, barcode_ps_dir, "../postscriptbarcode/build/monolithic", Context);
 	_ -> ok
     end,
 
