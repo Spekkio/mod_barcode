@@ -49,7 +49,7 @@ categories() ->
     [{barcode_type,meta,[{title, <<"Barcode Type">>}]}].
 
 predicates() ->
-    [{autocreate_barcode_type,[{title, <<"Barcode">>}],[{category, barcode_type}]}].
+    [{autocreate_barcode_type,[{title, <<"Autocreate Barcode">>}],[{category, barcode_type}]}].
 
 resources() ->
     [
@@ -117,7 +117,7 @@ cleanup(<<Char:1/binary, Tail/binary>>, Clean) ->
 	{match, [[{0,1}]]} ->
 	    cleanup(Tail, [Clean | binary_to_list(Char)]);
 	nomatch ->
-	    cleanup(Tail, [Clean]);	
+	    cleanup(Tail, [Clean]);
 	_ ->
 	    cleanup(Tail, [Clean])
     end;
